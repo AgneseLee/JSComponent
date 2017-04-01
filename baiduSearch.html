@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+body {
+    margin-left: 0px;
+    margin-top: 0px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+}
+.auto_hidden {
+    width:204px;border-top: 1px solid #333; 
+    border-bottom: 1px solid #333; 
+    border-left: 1px solid #333; 
+    border-right: 1px solid #333;
+    position:absolute;
+    display:none;
+}
+.auto_show {
+    width:204px;
+    border-top: 1px solid #333; 
+    border-bottom: 1px solid #333; 
+    border-left: 1px solid #333; 
+    border-right: 1px solid #333;
+    position:absolute;
+    z-index:9999; /* 设置对象的层叠顺序 */
+    display:block;
+}
+.auto_show div:hover{
+	 color:#ffffff;
+    background-color:highlight;
+    width:100%;
+}
+.auto_onmouseover{
+    color:#ffffff;
+    background-color:highlight;
+    width:100%;
+}
+.auto_onmouseout{
+    color:#000000;
+    width:100%;
+    background-color:#ffffff;
+}
+</style>
+</head>
+<body>
+	<div align="center">
+		<input type="text" style="width:300px;height:20px;font-size:14pt;" id="o" onkeyup="autoComplete.start(event)">
+	</div>
+    <div class="auto_hidden" id="auto"><!--自动完成 DIV--></div>
+	<script>
+			
+			var $ = function (id) {
+    return "string" == typeof id ? document.getElementById(id) : id;
+}
+		
+			function AutoComplete(obj,autoObj,arr){
+			    this.obj=$(obj);        //输入框
+			    this.autoObj=$(autoObj);//DIV的根节点
+			    this.value_arr=arr;        //不要包含重复值
+			    this.index = -1;          //当前选中的DIV的索引
+			    this.search_value="";   //保存当前搜索的字符
+			}
+
+			AutoComplete.prototype ={
+				//自动填充的弹框
+				init:function(){
+					this.autoObj.style.left = this.obj.offsetLeft +'px';
+					this.autoObj.style.top = this.obj.offsetTop + this.obj.offsetHight + 'px';
+					this.autoObj.style.width = this.obj.offsetWidth - 2 + 'px';
+				},
+				//单击删除该条记录
+				deleteDiv:function(e){
+					var that = this;
+					return function(e){
+						var e = e||event;
+						// console.log(that.autoObj)
+						var index = 0;
+						var tar =e.target;
+						tar.parentNode.removeChild(tar)
+						that.autoObj.className = 'auto_hidden'
+					}
+				},
+				//清空所有弹框
+				deleteAll:function(){
+					while(this.autoObj.hasChildNodes()){
+						this.autoObj.removeChild(this.autoObj.firstChild)
+					}
+					this.autoObj.className = 'auto_hidden'
+				},
+				//设置搜索框文字内容
+				setValue:function(_this,seq){
+					_this.obj.value = seq;
+					// _this.autoObj.className = 'auto_hidden';
+				},
+
+				//鼠标在项目上的特效，有bug，不如直接用:hover简单
+				autoOnmouseover: function(_this,_div_index,e){
+					// var that = this;
+					var e = e||event;
+					return function(){
+						_this.index = _div_index;
+						var length = _this.autoObj.children.length ;
+						for(var j=0; j<length; j++){
+							if(j==_this.index){
+								_this.autoObj.childNodes[j].className = 'auto_onmouseover';
+							}else{
+								_this.autoObj.childNodes[j].className = 'auto_onmouseout';
+							}
+						}
+						// _this.autoObj.className = 'auto_hidden'
+					}
+					
+				},
+
+				//添加条目
+				addItem: function(e){
+					var e = e||event;
+					// if(this.obj.onfocus){
+						var code = e.keyCode || e.charCode ||e.which;
+						var that = this;
+						if(code == 13){
+							this.value_arr.push(this.obj.value);
+						}
+					
+				},
+
+				//按键上下选择
+				pressKey: function(e){
+					var e = e||event;
+					var code = e.keyCode || e.charCode ||e.which;
+					var length = this.autoObj.childNodes.length;
+					// console.log(code)
+					switch(code){
+						case 40:
+							if(this.index<length){
+								this.index++
+							}else{
+								this.index = 0;
+							}
+							
+							break;
+						case 38:
+						    if(this.index<0){
+								this.index=length-1;
+							}else{
+								this.index--;
+							}
+						    break;
+						case 13:
+							this.obj.value = this.autoObj.childNodes[this.index].textContent;
+							this.autoObj.className = 'auto_hidden';
+							this.index = -1;
+						default:
+							return false;
+						    
+					}
+					// console.log(this.index,this.autoObj.childNodes)
+					this.changeClass(this.index)
+				},
+
+				//选中的效果以及搜索框更新
+				changeClass:function(index){
+					var length = this.autoObj.children.length ;
+						for(var j=0; j<length; j++){
+							if(j==index){
+								this.autoObj.childNodes[j].className = 'auto_onmouseover';
+							}else{
+								this.autoObj.childNodes[j].className = 'auto_onmouseout';
+							}
+						}
+				},
+
+				//程序入口
+				start: function(e){
+					var e = e||event;
+					this.init()
+					this.deleteAll();
+					var that = this;
+					// console.log(this.autoObj.children)
+					var reg = new RegExp('('+this.obj.value + ')','i');
+					var length = this.value_arr.length;
+					var valueArr=this.value_arr;
+					var div_index = 0;
+					for(var i=0; i<length; i++){
+						if(reg.test(valueArr[i])){
+							var div = document.createElement('div')
+							div.seq = valueArr[i];
+							div.className = 'auto_onmouseout';
+							div.onclick = this.deleteDiv(e);
+							div.addEventListener('click',function(){
+									that.setValue(that,this.seq)
+							},false)
+							// div.onmouseover = this.autoOnmouseover(this,div_index);
+							div.innerHTML = valueArr[i].replace(reg,'<strong>$1</strong>')
+							this.autoObj.appendChild(div)
+							this.autoObj.className = 'auto_show'
+							div_index++;
+						}
+					}
+					this.pressKey(e)
+					this.addItem(e);
+
+				}
+
+			}
+
+			var autoComplete = new AutoComplete('o','auto',['b0','b12','b22','b6','b7','b8','b2','abd','ab','ccd','cbcv','cxf']);
+		
+	</script>
+</body>
+</html>
