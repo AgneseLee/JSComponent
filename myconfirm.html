@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>myconfirm</title>
+	<style>
+		html,body{
+			height: 100%;
+			width: 100%;
+		}
+		.box{
+			height: 200px;
+			width: 400px;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform:translate(-50%,-50%);
+			background-color: #ccc;
+			display: none;
+		}
+		input{
+			background-color: pink;
+			height: 70px;
+			width: 50%;
+			color: #fff;
+			font-weight: bold;
+			position: absolute;
+			bottom: 0;
+			border-width: 0;
+			font-size: 24px;
+		}
+		input:active{
+			border:0;
+		}
+		.conf{
+			left: 0;
+			/*border-width:1px;*/
+			border-right: 1px #ccc solid;
+		}
+		.cancle{
+			right: 0;
+		}
+		#info{
+			color: #fff;
+			font-size: 24px;
+			text-align: center;
+		}
+		#mask{
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: rgba(0,0,0,.5);
+			/*height: 100%;
+			width: 100%;*/
+		}
+
+	</style>
+</head>
+<body>
+	fjfjfffffffffffffff
+	
+	<script>
+		(function(window){
+			var htmls = {
+				confirm: '<div class="box"><p id="info"></p><input class="conf" type="button" value="确认"/><input class="cancle" type="button" value="取消"/></div>',
+				mask:'<div id="mask"></div>',
+			}
+
+			function WinPop(type,ctx){
+				this.init(type,ctx);
+			}
+
+			WinPop.prototype = {
+
+				init: function(type,ctx){
+					this.createDom(type,ctx);
+					this.bindEvent();
+				},
+
+				createDom:function(type,ctx){
+					var box = document.createElement('div');
+					box.id = 'appendix';
+					box.innerHTML = htmls.mask + htmls.confirm;
+					document.body.appendChild(box);
+				},
+
+				bindEvent:function(){
+					var _this = this;
+					var conf = document.getElementsByClassName('conf')[0];
+					var cancle = document.getElementsByClassName('cancle')[0];
+
+					conf.addEventListener('click',function(){
+						console.log("are u sure?")
+						_this.hide();
+						_this.remove()
+					},false)
+
+					
+
+					cancle.addEventListener('click',function(){
+						_this.hide();
+						_this.remove()
+					},false)
+				},
+
+				hide:function(){
+					document.getElementsByClassName('box')[0].style.display = 'none';
+				},
+
+				show:function(){
+					document.getElementsByClassName('box')[0].style.display = 'block';
+				},
+
+				confirm:function(ctx,cb){
+					document.getElementById('info').innerText = ctx;
+					var _this = this;
+					_this.show();
+					document.addEventListener('keyup',function(e){
+						var e = e||event;
+						var code = e.keyCode||e.which||e.charCode;
+						if(code==27){
+							_this.hide();
+							_this.remove();
+						}else if(code==13){
+							cb();
+							_this.hide()
+						}else{
+							return false;
+						}
+
+					});
+				},
+				remove:function(){
+					document.body.removeChild(document.getElementById('appendix'))
+				}
+
+			}
+
+			
+			window.confirm = function(ctx,cb){
+				var myWin = new WinPop('confirm');
+				myWin.confirm.call(myWin,ctx,cb)
+			}
+		})(window)
+		confirm('are u ready?',function(){
+			console.log('this is me!!')
+		})
+	</script>
+</body>
+</html>
